@@ -1,0 +1,11 @@
+{
+  "name": "tecent-facility",
+  "version": "1.0.0",
+  "description": "Facilities For Fetching Tecent Resource",
+  "main": "index.js",
+  "author": "Tommy",
+  "license": "MIT",
+  "dependencies": {
+    "request": "^2.81.0"
+  }
+}
