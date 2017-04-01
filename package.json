@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/jamemark/p1#readme",
   "devDependencies": {
+    "bluebird": "^3.5.0",
     "request": "^2.81.0"
   }
 }

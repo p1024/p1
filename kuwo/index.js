@@ -1,10 +1,10 @@
 /**
  * @description This module provides facilities for fetching data from http://http://www.kuwo.cn
  */
-const request = require('request');
+const PM = require('bluebird');
+const request = PM.promisifyAll(require('request'), {multiArgs: true});
 const iconv = require('iconv-lite');
-const zlib = require('zlib');
-const PM = Promise;
+const zlib = PM.promisifyAll(require('zlib'));
 
 /**
  * fetch song uri from the web
@@ -12,19 +12,24 @@ const PM = Promise;
  * @param  {Array}  formatList accepted format list
  * @return {string}            uri of the song
  */
-function fetchSong(rid, formatList=['mp3', 'aac', 'wma']) {
+async function fetchSong(rid, formatList=['mp3', 'aac', 'wma']) {
 	if(formatList.every(f=>['mp3', 'wma', 'aac'].indexOf(f)>-1)) {
 
-		let uri = `http://antiserver.kuwo.cn/anti.s?response=url&rid=MUSIC%5F${rid}&format=${formatList.join('%7C')}&type=convert%5Furl`;
-		return new PM((res, rej)=>{
-			request(uri, (err, response, body)=>{
-				if(!err && response.statusCode === 200) {
-					res(body.trim());
-				} else {
-					rej({err:err, status: response.statusMessage})
-				}
-			});
-		})
+		let songUri, uri = `http://antiserver.kuwo.cn/anti.s?response=url&rid=MUSIC%5F${rid}&format=${formatList.join('%7C')}&type=convert%5Furl`;
+
+		try {
+			let [response, body] = await request.getAsync(uri);
+			if(response.statusCode !== 200) {
+				throw Error({code: response.statusCode, status: response.statusMessage});
+			} else {
+				songUri = body.trim();
+			}
+		} catch(e) {
+			throw e;
+		}
+
+		return songUri;
+
 	} else {
 		throw Error('invalid format');
 	}
@@ -35,26 +40,28 @@ function fetchSong(rid, formatList=['mp3', 'aac', 'wma']) {
  * @param  {string} rid id of resource
  * @return {object}     info of the resource
  */
-function fetchSongData(rid) {
-	let uri = `http://player.kuwo.cn/webmusic/st/getNewMuiseByRid?rid=MUSIC_${rid}`;
-	return new PM((res, rej)=>{
-		request(uri, (err, response, body)=>{
-			if(!err && response.statusCode === 200) {
+async function fetchSongData(rid) {
+	let songData, uri = `http://player.kuwo.cn/webmusic/st/getNewMuiseByRid?rid=MUSIC_${rid}`;
 
-				let song = body
-					.split(/\r\n|\r|\n/g)
-					.slice(1, -2)
-					.reduce((song, item)=>{
-						let data = item.match(/<(.*?)>(.*?)<(.*?)>/);
-						song[data[1]] = data[2];
-						return song;
-					}, {});
-				res(song);
-			} else {
-				rej({err:err, status: response.statusMessage})
-			}
-		});
-	})
+	try {
+		let [response, body] = await request.getAsync(uri);
+		if(response.statusCode !== 200) {
+			throw Error({code: response.statusCode, status: response.statusMessage});
+		} else {
+			songData = body
+				.split(/\r\n|\r|\n/g)
+				.slice(1, -2)
+				.reduce((song, item)=>{
+					let data = item.match(/<(.*?)>(.*?)<(.*?)>/);
+					song[data[1]] = data[2];
+					return song;
+				}, {});
+		}
+	} catch(e) {
+		throw e;
+	}
+
+	return songData;
 }
 
 
@@ -63,31 +70,26 @@ function fetchSongData(rid) {
  * @param  {string} rid id of the resource
  * @return {string}     lyric of the resource
  */
-function fetchLyric(rid) {
-	return fetchSongData(rid)
-		.then(song=>{
-			return new PM((res, rej)=>{
-				return new request({
-					uri: `http://newlyric.kuwo.cn/newlyric.lrc?${song.lyric}`,
-					encoding: null
-				}, (err, response, body)=>{
-					// 分离并解压、转码文件
-					if(!err && response.statusCode === 200) {
-						let location = body.toString().indexOf("\r\n\r\n");
-						zlib.unzip(body.slice(location+4), (err, buffer) => {
-						  if (!err) {
-						    res(iconv.decode(buffer, 'GB2312'))
-						  } else {
-						    rej(err)
-						  }
-						});
-					} else {
-						rej({err:err, status: response.statusMessage})
-					}
+async function fetchLyric(rid) {
+	let song = await fetchSongData(rid);
+	let lyric;
+	try {
+		let [response, body] = await request.getAsync({
+			uri: `http://newlyric.kuwo.cn/newlyric.lrc?${song.lyric}`,
+			encoding: null
+		});
+		if(response.statusCode !== 200) {
+			throw Error({code: response.statusCode, status: response.statusMessage});
+		} else {
+			let location = body.toString().indexOf("\r\n\r\n");
+			let buffer = await zlib.unzipAsync(body.slice(location+4));
+			lyric = iconv.decode(buffer, 'GB2312');
+		}
+	} catch(e) {
+		throw e;
+	}
 
-				});
-			})
-		})
+	return lyric;
 }
 
 module.exports = {

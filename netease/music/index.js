@@ -1,9 +1,8 @@
 /**
  * @description This module provides facilities for fetching data from http://music.163.com
  */
-const request = require('request');
 const enc = require('../enc/');
-const PM = Promise;
+const request = require('bluebird').promisifyAll(require('request'), {multiArgs: true});
 
 /**
  * Get parameter "option" of module "request" by sid
@@ -60,17 +59,21 @@ function getOption (sidStr, type="song") {
  * @param  {string|array} sids id of song
  * @return {array}         	   song's info
  */
-function getMultiSong(sids) {
-	let sidStr = Array.isArray(sids) ? sids.join() : sids;
-	return new PM((res, rej)=>{
-		request(getOption(sidStr, 'song'), (err, response, body)=>{
-			if(!err && response.statusCode === 200) {
-				res(body);
-			} else {
-				rej({err:err, status: response.statusMessage});
-			}
-		});
-	});
+async function getMultiSong(sids) {
+	let songList, sidStr = Array.isArray(sids) ? sids.join() : sids;
+
+	try {
+		let [response, body] = await request.postAsync(getOption(sidStr, 'song'));
+		if(response.statusCode !== 200) {
+			throw Error({code: response.statusCode, status: response.statusMessage});
+		} else {
+			songList = body;
+		}
+	} catch(e) {
+		throw e;
+	}
+
+	return songList;
 }
 
 /**
@@ -89,15 +92,19 @@ async function getSong(sid) {
  * @return {string}     lyric of song
  */
 async function getLyric(sid) {
-	return new PM((res, rej)=>{
-		request(getOption(sid, 'lyric'), (err, response, body)=>{
-			if(!err && response.statusCode === 200) {
-				res(body.lrc.lyric);
-			} else {
-				rej({err:err, status: response.statusMessage});
-			}
-		});
-	});
+	let lyric;
+	try {
+		let [response, body] = await request.postAsync(getOption(sid, 'lyric'));
+		if(response.statusCode !== 200) {
+			throw Error({code: response.statusCode, status: response.statusMessage});
+		} else {
+			lyric = body.lrc.lyric;
+		}
+	} catch(e) {
+		throw e;
+	}
+
+	return lyric;
 }
 
 module.exports = {

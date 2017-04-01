@@ -1,29 +1,28 @@
 /**
  * @description This module provides facilities for fetching data from http://www.kugou.com/
  */
-const request = require('request');
-const PM = Promise;
+const request = require('bluebird').promisifyAll(require('request'), {multiArgs: true});
 
 /**
  * fetch data of thesong
  * @param  {string} hash hash of the song
  * @return {object}      data of the song
  */
-function fetchSongData(hash) {
-	let uri = `http://www.kugou.com/yy/index.php?r=play/getdata&hash=${hash}&_=${Date.now()}`;
-	return new PM((res, rej)=>{
-		request({uri, json:true}, (err, response, body)=>{
-			if(!err && response.statusCode === 200) {
-				if(body.err_code === 0) {
-					res(body.data);
-				} else {
-					rej({err:body.err_code, status: body.status, type: 'MUSIC_SERVER'});
-				}
-			} else {
-				rej({err:err, status: response.statusMessage});
-			}
-		});
-	})
+async function fetchSongData(hash) {
+	let songData, uri = `http://www.kugou.com/yy/index.php?r=play/getdata&hash=${hash}&_=${Date.now()}`;
+
+	try {
+		let [response, body] = await request.getAsync({uri, json:true});
+		if(response.statusCode !== 200) {
+			throw Error({code: response.statusCode, status: response.statusMessage});
+		} else {
+			songData = body.data;
+		}
+	} catch(e) {
+		throw e;
+	}
+
+	return songData;
 }
 
 
@@ -32,8 +31,9 @@ function fetchSongData(hash) {
  * @param  {string} hash hash of the song
  * @return {string}      uri of the song resource
  */
-function fetchSong(hash) {
-	return fetchSongData(hash).then(song=>song.play_url);
+async function fetchSong(hash) {
+	let song = await fetchSongData(hash);
+	return song.play_url;
 }
 
 
@@ -42,10 +42,10 @@ function fetchSong(hash) {
  * @param  {string} hash hash of the song
  * @return {string}      lyric of the song
  */
-function fetchLyric(hash) {
-	return fetchSongData(hash).then(song=>song.lyrics);
+async function fetchLyric(hash) {
+	let song = await fetchSongData(hash);
+	return song.lyrics;
 }
-
 
 module.exports = {
 	song: fetchSong,
