@@ -1,11 +1,13 @@
 /**
  * @description This module provides facilities for fetching data from http://music.163.com
  */
-const enc = require('../enc/index');
+const request = require('request');
+const enc = require('../enc/');
+const PM = Promise;
 
 /**
  * Get parameter "option" of module "request" by sid
- * @param  {String} sidStr A group of sids joined by semicolon
+ * @param  {string} sidStr A group of sids joined by semicolon
  * @param  {string} type   song or lyric
  * @return {object}        parameter "option" of module "request" 
  */
@@ -53,12 +55,53 @@ function getOption (sidStr, type="song") {
 	}
 }
 
+/**
+ * get one or a group of songs
+ * @param  {string|array} sids id of song
+ * @return {array}         	   song's info
+ */
+function getMultiSong(sids) {
+	let sidStr = Array.isArray(sids) ? sids.join() : sids;
+	return new PM((res, rej)=>{
+		request(getOption(sidStr, 'song'), (err, response, body)=>{
+			if(!err && response.statusCode === 200) {
+				res(body);
+			} else {
+				rej({err:err, status: response.statusMessage});
+			}
+		});
+	});
+}
+
+/**
+ * get song's uri
+ * @param  {string} sid id of song
+ * @return {string}     uri of song
+ */
+async function getSong(sid) {
+	let songList = await getMultiSong(sid);
+	return songList.data[0].url;
+}
+
+/**
+ * get song's lyric
+ * @param  {string} sid id of song
+ * @return {string}     lyric of song
+ */
+async function getLyric(sid) {
+	return new PM((res, rej)=>{
+		request(getOption(sid, 'lyric'), (err, response, body)=>{
+			if(!err && response.statusCode === 200) {
+				res(body.lrc.lyric);
+			} else {
+				rej({err:err, status: response.statusMessage});
+			}
+		});
+	});
+}
+
 module.exports = {
-	song: function (sids) {
-		let sidStr = Array.isArray(sids) ? sids.join() : sids;
-		return getOption(sidStr, 'song');
-	},
-	lyric: function (sid) {
-		return getOption(sid, 'lyric');
-	}
+	song: getSong,
+	lyric: getLyric,
+	songs: getMultiSong
 }
