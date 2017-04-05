@@ -5,6 +5,7 @@ const kuwo = require('./kuwo/');
 const kugou = require('./kugou/');
 const baidu = require('./baidu/');
 const oneTing = require('./1ting/');
+const migu = require('./migu/');
 
 module.exports = {
 	netease,
@@ -13,5 +14,6 @@ module.exports = {
 	kuwo,
 	kugou,
 	baidu,
-	oneTing
+	oneTing,
+	migu
 }
