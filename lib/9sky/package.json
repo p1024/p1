@@ -1,0 +1,12 @@
+{
+  "name": "9sky-facility",
+  "version": "1.0.0",
+  "description": "Facilities For Fetching 9sky Resource",
+  "main": "index.js",
+  "author": "Tommy",
+  "license": "MIT",
+  "dependencies": {
+    "request": "^2.81.0",
+    "bluebird": "^3.5.0"
+  }
+}

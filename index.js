@@ -6,6 +6,7 @@ const kugou = require('./lib/kugou/');
 const baidu = require('./lib/baidu/');
 const oneTing = require('./lib/1ting/');
 const migu = require('./lib/migu/');
+const nineSky = require('./lib/9sky/');
 
 module.exports = {
 	netease,
@@ -15,5 +16,6 @@ module.exports = {
 	kugou,
 	baidu,
 	oneTing,
-	migu
+	migu,
+	nineSky
 }
