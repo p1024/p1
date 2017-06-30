@@ -1,6 +1,6 @@
 {
   "name": "p1",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "facilties for fetching data from network",
   "main": "index.js",
   "scripts": {
@@ -8,14 +8,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jamemark/p1.git"
+    "url": "git+https://github.com/p1024/p1.git"
   },
-  "author": "Tommy",
+  "author": "p1024",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jamemark/p1/issues"
+    "url": "https://github.com/p1024/p1/issues"
   },
-  "homepage": "https://github.com/jamemark/p1#readme",
+  "homepage": "https://github.com/p1024/p1#readme",
+  "dependencies": {
+    "request": "^2.81.0",
+    "bluebird": "^3.5.0",
+    "iconv-lite": "^0.4.15",
+    "crypto-js": "^3.1.6"
+  },
   "devDependencies": {
     "bluebird": "^3.5.0",
     "request": "^2.81.0"
