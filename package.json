@@ -17,13 +17,10 @@
   },
   "homepage": "https://github.com/p1024/p1#readme",
   "dependencies": {
-    "request": "^2.81.0",
-    "bluebird": "^3.5.0",
-    "iconv-lite": "^0.4.15",
-    "crypto-js": "^3.1.6"
-  },
-  "devDependencies": {
-    "bluebird": "^3.5.0",
-    "request": "^2.81.0"
+    "bluebird": "^3.5.1",
+    "cheerio": "^1.0.0-rc.2",
+    "crypto-js": "^3.1.8",
+    "iconv-lite": "^0.4.19",
+    "request": "^2.83.0"
   }
 }
